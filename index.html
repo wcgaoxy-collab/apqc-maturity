@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="基于 APQC 新版流程管理成熟度模型（7 原则 × 27 子类别 × 5 级）的在线自评打分平台">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>APQC 流程成熟度自评</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+:root{
+  --bg:#F3F4F1; --surface:#FFFFFF; --surface-2:#EAEDE9; --ink:#17212B; --ink-2:#46515C; --muted:#78838D;
+  --line:#D6DBD7; --accent:#0E6B63; --accent-ink:#FFFFFF; --accent-soft:#DAECE8; --target:#A8620F; --target-soft:#F6E7D2;
+  --l1:#E1EEEB; --l2:#AFD5CE; --l3:#6DB0A5; --l4:#2E897D; --l5:#0B5A52;
+  --l1-ink:#17212B; --l2-ink:#17212B; --l3-ink:#0D1B1F; --l4-ink:#FFFFFF; --l5-ink:#FFFFFF;
+  --warn:#B4462E; --warn-soft:#F7E1DA;
+  --serif:"Noto Serif SC","Songti SC","STSong",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#10161B; --surface:#172027; --surface-2:#1F2A32; --ink:#E5EBEE; --ink-2:#AEB9C1; --muted:#7F8C96;
+    --line:#2B3740; --accent:#4FB8AA; --accent-ink:#0B1A1C; --accent-soft:#1B3836; --target:#E3A24E; --target-soft:#3A2C18;
+    --l1:#1E3431; --l2:#22514A; --l3:#2C786C; --l4:#46A394; --l5:#86D5C7;
+    --l1-ink:#E5EBEE; --l2-ink:#E5EBEE; --l3-ink:#FFFFFF; --l4-ink:#0B1A1C; --l5-ink:#0B1A1C;
+    --warn:#E07A61; --warn-soft:#3B2420;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#10161B; --surface:#172027; --surface-2:#1F2A32; --ink:#E5EBEE; --ink-2:#AEB9C1; --muted:#7F8C96;
+  --line:#2B3740; --accent:#4FB8AA; --accent-ink:#0B1A1C; --accent-soft:#1B3836; --target:#E3A24E; --target-soft:#3A2C18;
+  --l1:#1E3431; --l2:#22514A; --l3:#2C786C; --l4:#46A394; --l5:#86D5C7;
+  --l1-ink:#E5EBEE; --l2-ink:#E5EBEE; --l3-ink:#FFFFFF; --l4-ink:#0B1A1C; --l5-ink:#0B1A1C;
+  --warn:#E07A61; --warn-soft:#3B2420;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.65}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:0 64px}
+h1,h2,h3{font-family:var(--serif);text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:26px;line-height:1.3}
+h2{font-size:20px;line-height:1.35}
+h3{font-size:16px;line-height:1.4}
+p{margin:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+header.top{padding-block:28px 0;display:flex;flex-wrap:wrap;gap:20px 32px;align-items:flex-end;justify-content:space-between}
+.brand p{color:var(--ink-2);max-width:62ch;margin-top:6px}
+.scorebar{display:flex;gap:10px;flex-wrap:wrap}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-width:110px}
+.chip .v{font-family:var(--mono);font-size:22px;font-weight:600;line-height:1.2}
+.chip .k{font-size:12px;color:var(--muted)}
+.chip.stage .v{font-family:var(--serif);font-size:19px}
+
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);margin-top:22px;border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto}
+nav.tabs button{background:none;border:0;padding:12px 16px 11px;cursor:pointer;color:var(--ink-2);border-bottom:2px solid transparent;white-space:nowrap;font-weight:500}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs button .n{font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:6px}
+
+section.view{padding-top:26px}
+.lead{color:var(--ink-2);max-width:70ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.stack{display:flex;flex-direction:column;gap:18px}
+.note{font-size:12.5px;color:var(--muted)}
+
+/* sample banner */
+.banner{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;background:var(--target-soft);border:1px solid color-mix(in srgb,var(--target) 35%,transparent);border-radius:10px;padding:10px 14px;margin-top:18px}
+.banner b{color:var(--target)}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--ink-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px}
+
+/* architecture */
+.logic{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+.lg{border-radius:10px;padding:14px 14px 12px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:4px}
+.lg .tag{font-size:11px;letter-spacing:.1em;color:var(--muted)}
+.lg h3{font-size:15.5px}
+.lg .role{font-size:13px;color:var(--accent);font-weight:500}
+.lg .subs{font-size:12.5px;color:var(--ink-2)}
+.lg.dir{grid-column:span 4}
+.lg.base{grid-column:span 4}
+.lg.people{grid-column:span 4}
+.lg.loop{grid-column:span 6}
+.lg.enable{grid-column:span 12;background:var(--surface-2)}
+.layerlab{grid-column:span 12;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);letter-spacing:.08em;margin-top:6px}
+.layerlab::after{content:"";flex:1;height:1px;background:var(--line)}
+.loopnote{grid-column:span 12;font-size:12.5px;color:var(--ink-2);text-align:center;padding:4px 0}
+@media (max-width:760px){.lg.dir,.lg.base,.lg.people,.lg.loop{grid-column:span 12}}
+
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.rung{border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;min-height:100%}
+.rung .lv{font-family:var(--mono);font-size:12px;opacity:.85}
+.rung h3{font-size:15px}
+.rung p{font-size:12.5px;line-height:1.6}
+@media (max-width:820px){.ladder{grid-template-columns:1fr}}
+
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px}
+th{font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.04em;background:var(--surface-2);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.evo td{min-width:130px}
+.evo td:first-child{min-width:110px;font-weight:500}
+.evo td .d{display:block;font-size:11.5px;color:var(--muted);font-weight:400}
+
+.diffs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.diff{border-top:2px solid var(--accent);padding-top:10px}
+.diff b{font-family:var(--serif);font-size:15px;display:block;margin-bottom:4px}
+.diff p{font-size:13px;color:var(--ink-2)}
+.mind{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mind div{padding:12px;border-right:1px solid var(--line);background:var(--surface)}
+.mind div:last-child{border-right:0}
+.mind b{display:block;font-family:var(--serif);font-size:14.5px;margin-bottom:4px}
+.mind p{font-size:12.5px;color:var(--ink-2)}
+@media (max-width:760px){.mind{grid-template-columns:1fr}.mind div{border-right:0;border-bottom:1px solid var(--line)}}
+
+/* assess */
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.field input,.field select,textarea{width:100%;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit}
+textarea{min-height:64px;resize:vertical}
+.assess{display:grid;grid-template-columns:230px 1fr;gap:22px;align-items:start;margin-top:18px}
+.pnav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 58px);display:flex;flex-direction:column;gap:4px}
+.pnav button{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;text-align:left;background:none;border:1px solid transparent;border-radius:8px;padding:9px 10px;cursor:pointer}
+.pnav button:hover{background:var(--surface)}
+.pnav button[aria-current="true"]{background:var(--surface);border-color:var(--line)}
+.pnav .idx{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.pnav .nm{font-weight:500}
+.pnav .pg{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.pnav .bar{grid-column:2 / 4;height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.pnav .bar i{display:block;height:100%;background:var(--accent)}
+@media (max-width:860px){
+  .assess{grid-template-columns:1fr}
+  .pnav{position:static;flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  .pnav button{min-width:150px}
+}
+.phead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px;align-items:flex-start}
+.phead .essence{color:var(--ink-2);max-width:66ch;margin-top:6px}
+.phead .diffline{margin-top:8px;font-size:13px;color:var(--ink-2)}
+.phead .diffline b{color:var(--accent);font-weight:500}
+.pscore{display:flex;gap:8px}
+.sub{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.sub .sh{padding:14px 16px 10px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px}
+.sub .sh h3{display:flex;gap:10px;align-items:baseline}
+.sub .sh h3 .code{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:400}
+.sub .sh .def{font-size:13px;color:var(--ink-2);flex-basis:100%;max-width:80ch}
+.sub .state{font-size:12px;color:var(--muted);display:flex;gap:10px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:500;white-space:nowrap}
+.pill.cur{background:var(--accent-soft);color:var(--accent)}
+.pill.tgt{background:var(--target-soft);color:var(--target)}
+.pill.none{background:var(--surface-2);color:var(--muted)}
+.lvls{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.lvl{display:grid;grid-template-columns:86px 1fr 84px;gap:12px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.lvl:last-child{border-bottom:0}
+.lvl:hover{background:color-mix(in srgb,var(--accent-soft) 45%,transparent)}
+.lvl.on{background:var(--accent-soft)}
+.lvl .lb{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}
+.lvl .sw{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:600;flex:none}
+.lvl .tx{font-size:13px;color:var(--ink-2);line-height:1.6}
+.lvl.on .tx{color:var(--ink)}
+.lvl .tx .inf{font-size:11px;color:var(--muted);margin-left:6px;white-space:nowrap}
+.lvl .tg{justify-self:end;background:none;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:12px;cursor:pointer;color:var(--muted)}
+.lvl .tg[aria-pressed="true"]{background:var(--target-soft);border-color:var(--target);color:var(--target);font-weight:500}
+.lvl .tg:hover{border-color:var(--target)}
+@media (max-width:560px){.lvl{grid-template-columns:1fr auto;}.lvl .tx{grid-column:1 / 3;grid-row:2}.lvl .lb{grid-row:1}}
+.sub .nt{padding:10px 16px 14px;border-top:1px solid var(--line);background:var(--surface-2)}
+.sub .nt label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+.sub .nt textarea{min-height:40px;background:var(--surface)}
+.practice{border-left:3px solid var(--target);padding:4px 0 4px 12px}
+.practice b{font-weight:500}
+.practice .st{font-size:11.5px;color:var(--target);margin-left:6px}
+.practice p{font-size:13px;color:var(--ink-2);margin-top:2px}
+.pnext{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* report */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .v{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1.15}
+.kpi .v small{font-size:14px;color:var(--muted);font-weight:400}
+.kpi .v.serif{font-family:var(--serif);font-size:24px}
+.kpi .k{font-size:12px;color:var(--muted);margin-top:4px}
+.chartbox svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--target) 0 4px,transparent 4px 7px)}
+.ptable td,.ptable th{white-space:nowrap}
+.ptable td.nm{font-weight:500}
+.mbar{position:relative;height:10px;background:var(--surface-2);border-radius:5px;min-width:140px}
+.mbar .c{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:5px}
+.mbar .t{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--target)}
+.gap{color:var(--target);font-weight:600}
+.gap.zero{color:var(--muted);font-weight:400}
+.lvtag{display:inline-block;border-radius:6px;padding:0 8px;font-size:12px;font-weight:500}
+.insight{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.insight:last-child{border-bottom:0}
+.insight .sev{font-size:11.5px;font-weight:600;border-radius:4px;padding:1px 7px;align-self:start;margin-top:2px;white-space:nowrap}
+.sev.hi{background:var(--warn-soft);color:var(--warn)}
+.sev.md{background:var(--target-soft);color:var(--target)}
+.sev.ok{background:var(--accent-soft);color:var(--accent)}
+.insight b{font-weight:600}
+.insight p{grid-column:2;font-size:13px;color:var(--ink-2)}
+.road{display:flex;flex-direction:column;gap:14px}
+.rd{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.rd .rh{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.rd .rh .path{font-size:13px;color:var(--ink-2)}
+.rd .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.rd .cols{grid-template-columns:1fr}}
+.rd h4{margin:0 0 6px;font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:500}
+.rd ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.rd li span{color:var(--ink-2)}
+.tooltip{position:fixed;pointer-events:none;z-index:50;background:var(--ink);color:var(--bg);font-size:12px;border-radius:6px;padding:6px 9px;max-width:260px;line-height:1.5}
+.dlg{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 40%,transparent);display:grid;place-items:center;z-index:60;padding:16px}
+.dlg .box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;max-width:560px;width:100%;display:flex;flex-direction:column;gap:12px}
+.dlg textarea{min-height:180px;font-family:var(--mono);font-size:12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:13px;z-index:70}
+.method{font-size:13px;color:var(--ink-2)}
+.method code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);padding:1px 6px;border-radius:4px;color:var(--ink)}
+.method li{margin-bottom:6px}
+@media (prefers-reduced-motion:no-preference){.lvl,.pnav button,.btn{transition:background .15s,border-color .15s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow">APQC Process Management Maturity · 7 原则 × 27 子类别 × 5 级</div>
+      <h1>APQC 流程管理成熟度自评</h1>
+      <p>依据 APQC 新版流程管理成熟度模型的七大原则拆解评判标准。逐项对照分级描述选定“现状”与“目标”，平台自动计算原则得分、组织整体阶段，并给出短板诊断与进阶路径。</p>
+    </div>
+    <div class="scorebar" id="scorebar"></div>
+  </header>
+
+  <div class="banner" id="sampleBanner" hidden>
+    <span><b>当前为示例数据</b>：一家处于“发展阶段”的制造集团的虚拟自评结果，用于展示报告效果，并非真实评估。</span>
+    <div class="btnrow"><button class="btn primary" id="startFresh">清空，开始我的评估</button></div>
+  </div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="model" aria-selected="true"><span class="n">01</span>模型架构与逻辑</button>
+    <button role="tab" data-tab="assess" aria-selected="false"><span class="n">02</span>分项打分</button>
+    <button role="tab" data-tab="report" aria-selected="false"><span class="n">03</span>诊断报告</button>
+    <button role="tab" data-tab="method" aria-selected="false"><span class="n">04</span>计分规则与数据</button>
+  </nav>
+
+  <section class="view" id="view-model"></section>
+  <section class="view" id="view-assess" hidden></section>
+  <section class="view" id="view-report" hidden></section>
+  <section class="view" id="view-method" hidden></section>
+</div>
+<div class="tooltip" id="tip" hidden></div>
+
+<script>
+const LEVELS=["初始","发展","标准化","优化","创新"];
+const LEVEL_DEF=[
+ "无规范化流程，流程均为临时制定；业务成功依赖熟练员工，而非标准化的流程体系。",
+ "部分流程和项目实现规范化规划、标准化管理和量化考核；既定准则确保现有实践得以保留，项目按书面计划执行。",
+ "大部分流程通过程序、工具和方法实现规范化、明确定义、全员理解并书面记录；在组织内一致执行；结果具备定性可预测性，但缺乏量化保障。",
+ "各子流程服务于整体绩效，通过统计和定量技术实施管控；指标基于客户、组织与执行者需求设定；能识别并纠正偏差，绩效可控可预测。",
+ "基于对常见变异原因的定量分析持续迭代改进；制定并修订定量改进目标；结合组织整体目标评估效果，由充分授权的团队落地改进。"
+];
+const SCOPE=["个人 / 临时","部门 / 业务单元","企业统一","端到端 · 量化管控","文化内化 · 外部延伸"];
+/* "~" 前缀 = 原文未直接给出，依据该原则演进规律推演的描述 */
+const MODEL=[
+{id:"SA",name:"战略对齐",layer:"dir",role:"明确方向",
+ essence:"流程管理与组织目标的契合程度。战略决定流程工作的优先级，流程绩效又持续为战略决策提供证据，形成双向闭环。",
+ diff:"流程管理与组织规划活动、决策制定的融合程度",
+ keys:["无明确关联","部门战略指导 · 单项目","组织战略指导 · 项目组合","按重要性分类 · 跨组合统筹","融入文化 · 数据驱动战略"],
+ subs:[
+  {n:"协同整合",d:"与业务战略、组织整体战略的融合，以及各业务单元在流程管理战略和方法上的协同一致。",L:[
+   "流程举措与组织既定战略的契合度极低，没有明确的关联机制；各单位各自其是。",
+   "流程举措由部门或职能战略指导，各业务单元的流程管理方法互不统一，缺少企业层面的统筹。",
+   "流程管理工作由组织整体战略指导，高管层明确认可流程的重要性和核心作用；各业务单元采用一致的流程管理方法。",
+   "流程管理战略与组织整体战略完全一致，企业级流程管理战略在全组织全面推行；按战略重要性对流程分类（核心 / 指导 / 使能），并匹配相应考核指标。",
+   "流程管理深度融入组织文化，成为决策和运营的底层逻辑；流程与战略高度融合、相互驱动。"]},
+  {n:"执行落地",d:"开展流程举措的标准化方法，通常采用项目管理方法论。",L:[
+   "流程举措临时发起，没有标准的实施方法。",
+   "流程工作以战术性、单个项目为主，按项目各自推进，缺乏企业层面统筹。",
+   "流程举措具有运营属性，通过项目组合管理方法统一实施。",
+   "跨多个项目组合管理流程举措，设有专门机制识别各项目间的协同点、冗余环节和共享资源。",
+   "~流程举措组合随战略动态调整，与组织战略能力建设联动，成为常态化的能力建设机制。"]},
+  {n:"战略规划",d:"为实现特定最终状态、核心目标而制定的系统性计划。",L:[
+   "战略规划不考虑流程，流程工作没有规划。",
+   "流程规划局限于部门或职能层面，与企业战略规划周期脱节。",
+   "将绩效改进和流程改进纳入年度战略规划周期，利用流程绩效数据和战略规划筛选项目与战略举措。",
+   "依据流程在组织框架和业务目标中的重要性差异化配置目标与资源；形成差异化竞争优势的流程优先优化到行业领先，通用流程按行业实践标准化。",
+   "流程绩效数据为战略研讨提供核心指导，并为组织战略能力建设提供关键洞察。"]}
+ ],
+ practices:[
+  {t:"推动流程与战略深度绑定",s:3,d:"将绩效提升和流程改进纳入年度战略规划周期，用流程绩效数据与战略规划共同筛选项目，打破部门壁垒。"},
+  {t:"按战略重要性对流程分类",s:4,d:"识别形成差异化竞争优势的流程优先优化；其余通用流程按行业实践标准化。可采用核心流程 / 指导流程 / 使能流程的端到端分类。"},
+  {t:"构建流程思维文化",s:4,d:"由职能导向逐步走向流程思维、流程聚焦、流程导向；允许不同业务板块处于不同阶段，由高管负责跨企业的端到端流程。"}
+ ]},
+{id:"PG",name:"流程治理",layer:"dir",role:"建立责任",
+ essence:"支撑流程管理有效运转的结构性要素：角色、职责、问责、监督、赞助和管理架构。治理水平决定流程管理的落地效率、速度与深度。",
+ diff:"方法论、角色和实践的标准化程度，以及治理机构的组成结构（分散 → 集中 → 混合）",
+ keys:["临时 · 无规则","局部标准 · 核心团队权限有限","企业级制度化 · 所有者书面化","高管跨职能团队 · 合规考核","混合治理 · 继任计划"],
+ subs:[
+  {n:"治理团队",d:"对组织内流程管理工作承担最终责任和问责义务的决策群体。",L:[
+   "治理架构临时制定或极不完善，没有明确的管理规则。",
+   "可能成立了流程管理核心团队，但权限有限，不对全组织的流程合规性承担问责。",
+   "正式确立流程管理使命，建立明确的流程监督架构，领导层直接参与流程管理工作。",
+   "由包含各职能高级管理人员代表的核心团队负责流程管理，确保企业政策合规落地（如考核指标），并建立完善的合规考核机制。",
+   "采用混合式治理：集中式团队（如流程卓越中心 COE）提供统一准则与监督，各业务单元分散执行；可纳入合作伙伴、客户等外部利益相关者；治理运转依赖角色和规则，而非具体任职人员。"]},
+  {n:"角色定位",d:"与组织或职能角色相匹配的正式 / 非正式流程管理角色及职责，如正式的流程所有者。",L:[
+   "流程角色没有定义，出了问题找不到明确责任人。",
+   "流程角色在本地定义，与组织整体角色的契合度较低。",
+   "明确工作分配和流程角色；流程所有者的任职要求和工作职责被清晰定义并书面记录。",
+   "职能内和跨职能的流程角色及所有者在全组织保持一致并明确定义，且与职位描述、职业发展路径深度融合。",
+   "制定并书面记录正式的继任计划，确保关键流程角色人员配备充足、工作延续。"]},
+  {n:"流程管理方法",d:"组织内开展流程举措统一使用的标准、方法论和工具。",L:[
+   "流程管理方法临时制定或极不完善。",
+   "各职能部门或业务单元内存在零散的正式流程管理体系和流程标准。",
+   "在企业层面将流程管理方法论和标准制度化。",
+   "在全组织推广统一流程标准，政策合规（含考核指标）全面落地并被考核。",
+   "基于关键绩效指标（财务影响、客户满意度、运营效率）定期评估流程的价值和实际影响，据此迭代方法。"]},
+  {n:"互动模式",d:"流程管理在整个组织内的可见度，以及连接各环节、各部门的标准作业程序。",L:[
+   "流程管理在组织内几乎不可见。",
+   "流程活动只在部门内部可见，跨部门衔接依赖个人协调。",
+   "流程活动在全组织内可见，有标准作业程序连接各环节、各部门。",
+   "流程活动优先级划分和利益相关者参与全面融入组织所有业务活动。",
+   "流程管理成为组织日常运营的有机组成部分，互动延伸到合作伙伴、客户等外部主体。"]}
+ ],
+ practices:[
+  {t:"明确流程所有者的角色定位",s:3,d:"为关键流程指定专属所有者，对变革、培训、监控和持续改进承担最终问责；制定可落地的选拔标准，可由指导委员会结合标准化问卷评估候选人。"},
+  {t:"采用混合式治理架构",s:5,d:"设立流程卓越中心（COE）或 BPM 专属团队，负责审核流程、汇报进展、收集反馈、维护框架和政策；各业务单元保持执行灵活性与问责。"}
+ ]},
+{id:"PM",name:"流程模型",layer:"base",role:"形成共同语言",
+ essence:"统一的框架定义“做什么”，端到端流程图谱呈现“怎么做”，相关知识让员工知道“如何做好”。流程模型是统一信息、数据、程序、角色、职责的载体。",
+ diff:"流程的标准化程度、主题专家（SME）的可获取性，以及跨职能壁垒的整合程度",
+ keys:["临时零散 · 信息分散","局部文档 · 壁垒内存储","统一框架术语 · 识别价值流","端到端打通 · 元数据检索","实时关联 · 按角色推送"],
+ subs:[
+  {n:"流程文档",d:"对流程进行系统记录和标准化编码，可使用 RACI、SIPOC、知识图谱等工具。",L:[
+   "流程文档记录临时制定或极不完善。",
+   "仅在局部区域或部门记录流程；文档编制、命名、标签和管控规则只在业务单元或职能层面制定。",
+   "全组织采用统一的标准化方法和术语编制文档，流程文档与系统架构文档保持高度一致。",
+   "所有流程内容定期审核和更新；文档嵌入业务规则、标准作业程序、模板、政策等背景知识，提升可执行性。",
+   "所有流程接受“定期审核 + 事件触发审核”双重更新，审核纳入跨行业流程设计标杆和最佳实践。"]},
+  {n:"框架体系",d:"对企业业务进行层级分解，从流程组、流程和活动层面描述核心工作，如 APQC PCF。",L:[
+   "未在全组织统一使用企业流程框架。",
+   "流程框架未普遍使用，甚至完全未使用。",
+   "全组织采用统一框架（如 PCF）；已识别出高层级的跨职能流程和价值流。",
+   "整合统一的企业流程框架和架构，关联系统、考核指标和知识体系。",
+   "标杆数据、最佳实践、流程内容与框架要素之间近实时关联。"]},
+  {n:"流程设计",d:"确定流程的工作流、技术需求和实施落地要求，可使用流程图、流程仿真软件等。",L:[
+   "~流程设计依赖个人经验，没有统一方法。",
+   "~流程设计局限于部门内部，跨职能衔接缺失。",
+   "以统一的标准化方法、术语和框架支撑流程设计工作。",
+   "全面梳理并打通跨职能边界的端到端流程。",
+   "流程设计持续吸收跨行业的设计标杆和最佳实践，保持行业领先。"]},
+  {n:"流程变异",d:"流程的各种执行形式和变体，以及“可偏离企业统一标准”的规则。",L:[
+   "~变异未被识别，各地各部门做法各异。",
+   "能够识别流程变异，但未整合为统一的标准流程。",
+   "制定可接受变异准则并逐案评估：核心工作是否已清晰定义？变异能否形成差异化竞争优势？是否由区域差异或监管要求导致？",
+   "基于既定业务规则允许合理变异：框架与关键环节保持统一，变异只出现在细化建模层或列为“变异子步骤”，提升适应性与敏捷性。",
+   "~变异规则与标杆数据、实时执行数据联动，在定期和事件触发审核中动态复核。"]},
+  {n:"可访问性",d:"流程信息的统一存储方式和规范化访问管控，确保安全性和可获取性。",L:[
+   "流程信息分散在各部门，没有统一管理。",
+   "大多数流程文档的存储和访问局限于各业务单元或职能壁垒内。",
+   "~流程文档集中存储，全组织按统一规则和权限访问。",
+   "所有流程内容在全组织内统一访问，可基于标准化元数据快速检索和分类。",
+   "系统按用户岗位角色自动推送匹配的流程内容，并及时提示流程更新。"]},
+  {n:"专业能力",d:"参与流程工作的主题专家（SME）的识别标准、工作范围和职责界定。",L:[
+   "~没有识别主题专家，流程知识停留在个人手中。",
+   "仅在具体项目、业务单元或职能部门内识别并指派主题专家。",
+   "主题专家与流程所有者主动协作，确保流程一致性，共同推动改进。",
+   "主题专家跨职能边界协作，共同发布流程最佳实践和经验总结。",
+   "~主题专家网络对接跨行业标杆与外部实践，持续输入领先做法。"]}
+ ],
+ practices:[
+  {t:"用流程框架支撑现状评估",s:3,d:"以框架为统一基准，结合问卷（范围广、要对比）、访谈（要深度）、工作坊（范围窄、要共识）三种方法评估现状。"},
+  {t:"制定流程变异的可接受准则",s:3,d:"建立治理流程逐案评估变异；框架始终统一，变异只在细化层面出现，并配套允许情形、审批和管控规则。"},
+  {t:"以知识赋能提升可执行性",s:4,d:"把业务规则、SOP、模板、政策嵌入流程，借助 PCF 等框架做内容管理，让执行者在工作中随时取得所需知识。"}
+ ]},
+{id:"CM",name:"变革管理",layer:"people",role:"推动落地",
+ essence:"核心是人：有效沟通、收集真实反馈、给出一致的解释与指导，让员工从“变革的接受者”变为“变革的参与者”。",
+ diff:"变革工作从被动处理矛盾，走向主动前置规划人员适配",
+ keys:["临时 · 参与度极低","部门主导培训 · 局部沟通","结构化方法 · 正式培训体系","全员参与 · 沟通与认可体系","认证体系 · 文化基因"],
+ subs:[
+  {n:"员工参与",d:"员工对组织的情感联结，以及建立信任、将员工工作与组织目标关联的策略。",L:[
+   "员工对变革的参与度极低。",
+   "员工参与变革的范围有限。",
+   "识别并充分利用主题专家，培养员工的流程能力和变革接受度；组建跨领域核心设计团队参与方案设计。",
+   "以正式、系统化的方法推动员工全面参与流程培训和变革；培养“变革推动者”，授权员工自主开展流程工作。",
+   "领导层主动、持续地推动可持续的流程能力建设；实时监控变革指标，主动识别和应对阻力。"]},
+  {n:"沟通机制",d:"组织与员工之间交换信息、设定期望、形成共识的双向过程及其渠道。",L:[
+   "没有变革沟通计划，信息靠口头零散传递。",
+   "变革信息只在各业务单元或职能部门内传递，缺乏跨部门的统一沟通。",
+   "结构化变革管理方法在全组织统一推行，包含统一的沟通安排。",
+   "搭建正式的变革沟通和宣贯体系；按岗位、层级分层沟通，讲清“变革对我有什么好处”，并收集自下而上的反馈。",
+   "与行业协会、合作伙伴等外部主体建立变革协作机制，吸收行业先进经验。"]},
+  {n:"培训体系",d:"为改变行为、提升流程执行绩效、使员工达到所需技能而开展的系统化培训。",L:[
+   "没有系统化的培训体系。",
+   "培训临时开展，通常由部门主管或主题专家推动，没有企业层面统筹。",
+   "建立正式的变革培训体系，针对不同层级、不同岗位开展系统化培训。",
+   "为员工制定个性化职业发展规划；运用一对一辅导、场景模拟 / 角色扮演、自定节奏视频等多种方式。",
+   "采用外部或内部的正式认证体系，系统化管理员工的流程能力建设。"]},
+  {n:"组织文化",d:"组织的价值观、信念、领导风格、集体默认假设和工作惯例。",L:[
+   "没有既定的流程变革战略，变革活动临时开展，缺少统一方法。",
+   "非正式使用部分变革管理方法；文化仍以职能导向为主。",
+   "~高层认可流程价值并以身作则推动新行为；变革管理方法成为组织共识。",
+   "打造支撑全组织协作和知识共享的数字化机制，流程思维成为普遍共识。",
+   "变革成为组织的文化基因。"]},
+  {n:"激励认可",d:"鼓励员工做出与变革匹配的行为、达成预期绩效的正式和非正式激励。",L:[
+   "~没有与变革相关的激励。",
+   "~只有零星、非正式的认可。",
+   "~以奖金、表彰、晋升等正式激励强化期望行为，并与变革参与度、新流程执行效果挂钩。",
+   "建立员工变革行为的认可体系。",
+   "~流程能力认证与职业发展、激励机制联动。"]}
+ ],
+ practices:[
+  {t:"采用多维度的员工参与策略",s:2,d:"让员工参与变革举措的制定；按岗位层级开展针对性分层沟通；提供与参与度、执行效果挂钩的正式正向激励。"},
+  {t:"借助变革推动者带动参与",s:4,d:"识别组织内的影响力中心，培养为变革推动者；把反对者当作“审慎质疑者”认真倾听并改进方案。"},
+  {t:"授权员工自主开展流程工作",s:4,d:"让执行者参与流程设计与改进；采用一对一辅导、场景模拟、自定节奏视频培训，把培训分散到实施各阶段。"},
+  {t:"监控变革进程，主动应对阻力",s:5,d:"设定反映变革进展的指标并持续监控（如新表单完成率、流程文档阅读量），分阶段实施，每阶段收集反馈后再推进。"}
+ ]},
+{id:"PP",name:"流程绩效",layer:"loop",role:"提供证据",
+ essence:"对流程的衡量、监控和管控。业务价值决定衡量什么，领先、滞后和过程指标共同揭示绩效，标杆与分析为数据赋予语境并指向改进机会。",
+ diff:"能否主动运用多维度的量化指标体系理解并优化流程；标准化 → 优化是最常见的卡点",
+ keys:["量化随意","聚焦高风险流程 · 滞后指标","平衡三类指标 · 管控节点","内外标杆 · 端到端仪表盘","战略影响 · 预测与指导分析"],
+ subs:[
+  {n:"标杆基准",d:"经量化的“行业领先”成果，用作对比分析的参考标准。",L:[
+   "~没有任何对标。",
+   "对标被动、零散，未融入日常绩效管理。",
+   "~通过现状评估建立内部基线，开始开展内部团队或业务单元之间的对标。",
+   "结合内外部标杆基准，为绩效指标赋予实际业务语境。",
+   "依据外部标杆（行业前 25%、中位数、后 25%）制定绩效目标，借助框架开展常态化对标。"]},
+  {n:"量化指标",d:"对流程绩效的具体观测，分为成本效益、员工生产率、流程效率和周期时间四类。",L:[
+   "流程绩效量化随意且零散，缺乏系统性，甚至没有。",
+   "量化聚焦于高风险、高交易量的流程，以滞后指标为主，跟踪随意或只在员工个人层面。",
+   "量化与业务价值契合，平衡使用领先、滞后和过程指标；一个 KPI 搭配最多七个辅助指标。",
+   "在企业范围建立端到端流程的量化体系，含核心和辅助指标；通过研讨会结合标杆与可靠性、关联性、易用性、认可度四项标准筛选指标。",
+   "指标与流程对企业战略的影响挂钩，涵盖效率、效果、影响力和满意度等维度。"]},
+  {n:"管控节点",d:"在流程中设置的监控环节，用于发现优化机会，并在绩效不达预期时执行应急预案。",L:[
+   "~没有管控节点，问题靠客户投诉被动暴露。",
+   "~绩效问题多在结果阶段事后发现。",
+   "将指标嵌入业务流程各环节并设置管控节点，为 KPI 设上下阈值，按例外管理及时发现问题。",
+   "通过绩效仪表盘可视化管理（当期值、四个季度趋势、外部标杆，红黄绿编码），在风险扩大前发现问题。",
+   "预判潜在的流程绩效问题并提前干预。"]},
+  {n:"分析能力",d:"解读指标数据、提炼根因并制定对策，分描述性、预测性和指导性分析三类。",L:[
+   "~不做数据分析。",
+   "~零散的描述性统计，由个人完成。",
+   "~以描述性分析定位偏差和根因，识别哪些输入影响关键业务结果。",
+   "基于历史趋势开展分析；以迭代方式（范围界定 → 分析实施 → 结果评估 → 落地应用）建设分析项目，调动业务、数据团队和终端用户参与。",
+   "运用预测性和指导性分析，预判流程绩效问题并筛选最有效的解决方案。"]}
+ ],
+ practices:[
+  {t:"厘清指标类型",s:3,d:"区分标杆基准、KPI 和辅助指标；在过程和滞后指标之外补上领先（预测性）指标，量化周期时间、交付周期、员工满意度等上游输入。"},
+  {t:"协作制定适配指标",s:4,d:"以高层研讨会为核心，输入利益相关者建议、外部标杆和筛选标准，输出优先级 KPI 清单和量化计划。"},
+  {t:"搭建绩效跟踪仪表盘",s:4,d:"迭代建设，展示当期值、趋势和外部标杆，用红黄绿编码帮助决策者聚焦根因。"},
+  {t:"借助标杆为绩效赋予语境",s:5,d:"通过第三方平台获取行业四分位数据，结合当前绩效制定流程类别平衡计分卡，识别战略性流程和优先改进机会。"}
+ ]},
+{id:"PI",name:"流程优化",layer:"loop",role:"创造价值",
+ essence:"流程管理的最终目的是提升绩效。脱离其他六项原则的优化容易碎片化并引发副作用；标准化筛选、组合统筹、全员参与构成完整的优化体系。",
+ diff:"改善工作从临时补救，转变为全员主动发掘机会的常态化文化",
+ keys:["依赖核心骨干","精益六西格玛 · 项目导向","统一方法 · 项目组合","定期评审 · 全员建议","持续优化文化 · 业务敏捷"],
+ subs:[
+  {n:"机会发掘",d:"通过定期评审，或由一线员工至高层管理者各层级提出改进建议。",L:[
+   "优化工作随意零散，依靠少数“核心骨干”解决流程问题。",
+   "在个人或团队层面开展精益、六西格玛等能力培训，优化机会零散发现。",
+   "在企业范围建立统一、结构化的流程优化实施方法。",
+   "定期评审流程，确保其处于优化状态；企业全体员工均可提交优化建议供评审。",
+   "持续优化成为文化内核，各层级主动发掘优化机会。"]},
+  {n:"优先级排序与筛选",d:"制定筛选标准评估优化机会的价值，选定拟推进的项目。",L:[
+   "~没有筛选标准，谁提出、谁着急就先做谁。",
+   "优化项目零散开展，或仅在部门、业务单元内部自行决定。",
+   "通过项目组合管理推进优化：以商业案例为标准输入，按价值、战略契合度、资源需求和风险排序，由评审委员会评定。",
+   "项目组合融入与战略相关的优先级标准，采用标准化绩效指标，基于历史趋势预测，开展结构化的项目与组合评审。",
+   "以完善的项目组合管理方法和优化工具包，保证全员持续、规范地发掘和推进优化。"]},
+  {n:"可持续性",d:"长期维持或支撑某一活动、流程或绩效水平的能力。",L:[
+   "~改进成果难以保持，同类问题反复出现。",
+   "优化工作聚焦于项目本身的成功，而非可持续的成果。",
+   "优化举措实现可视化管理，减少重复和冲突。",
+   "在定期评审之上融入绩效指标和常态化监控，让持续优化成为管理层和一线员工的固有思维。",
+   "企业具备敏捷的业务能力，持续改进成为文化本身。"]}
+ ],
+ practices:[
+  {t:"制定标准筛选优化机会",s:3,d:"标准化绩效优化申请表；以价值、战略契合、资源、风险为维度分类排序；组建评审委员会；建立项目组合监控进度。"},
+  {t:"推动优化文化转型",s:4,d:"先建立流程定期评审机制，再逐步融入绩效指标和常态化监控；通过愿景使命价值观、显性实践和文化载体传递优化文化。"}
+ ]},
+{id:"TT",name:"工具与技术",layer:"enable",role:"连接与规模化",
+ essence:"工具与技术不取代其他原则：企业无法自动化自己不理解的流程。它在清晰流程、价值判断和治理规则之上，为标准化、量化、协同与持续改进提供平台。",
+ diff:"从局部工具到企业统一平台，再到数据联动、规模化自动化与外部延伸",
+ keys:["工具零散 · 自动化极低","BU 内标准化","企业统一工具 · 知识库","决策支持联动 · 规模化自动化","前沿技术 · 延伸至外部"],
+ subs:[
+  {n:"流程管理工具",d:"支撑流程管理的各类技术：文档管理、流程建模、绩效管理和决策建模工具。",L:[
+   "业务工具使用零散，缺乏流程文档管理和相关技术支撑。",
+   "在业务单元或职能内部实现工具、技术和方法标准化，明确各类技术的适用规则。",
+   "企业层面建立统一的流程管理工具体系，搭建统一流程知识库（权限管理、版本控制）；建立技术治理与筛选标准。",
+   "决策支持工具与流程绩效数据深度联动；以关联数据结构打通流程、指标、知识和风险资产。",
+   "主动发掘、评估并落地前沿技术；决策支持工具突破描述性分析，具备深度分析能力。"]},
+  {n:"流程自动化",d:"对业务流程和职能的自动化改造，通常用于控制成本或处理非增值任务。",L:[
+   "流程自动化程度极低。",
+   "以统一方法在业务单元或职能层面识别并落地技术。",
+   "在企业范围建立技术决策治理（高层指导委员会）和自动化筛选标准：重复性人工任务、成本节约、事务性、发生频次、效率或准确性问题。",
+   "在企业范围大规模推进流程自动化，打通各业务单元和职能部门；IT、流程团队、业务部门三方均衡协作。",
+   "流程自动化延伸到企业外部合作方。"]}
+ ],
+ practices:[
+  {t:"先梳理流程，再落地技术",s:2,d:"制定技术和功能开发准则，避免让流程去适配技术、过度采购，或误以为上线 IT 系统就等于流程标准化。"},
+  {t:"建立技术决策治理",s:3,d:"组建由 IT、运营、HR 及目标部门高管组成的指导委员会，确保项目与战略一致、监控效果、协调资源。"},
+  {t:"制定清晰的自动化筛选标准",s:3,d:"按重复性、成本节约、事务性、频次、效率或准确性问题评估，并兼顾客户和员工满意度等非财务收益。"},
+  {t:"推动 IT 与流程团队深度协作",s:4,d:"流程团队管理机会组合、共编商业案例、界定需求；IT 负责开发与集成；业务部门发起并对方案负责。"},
+  {t:"融合流程与知识、风险资产",s:4,d:"让流程、指标与知识资产在同一平台互联，例如通过仪表盘访问所有流程地图及相关知识资产。"}
+ ]}
+];
+MODEL.forEach((p,pi)=>p.subs.forEach((s,si)=>{s.key=p.id+"-"+(si+1)}));
+const TOTAL_SUBS=MODEL.reduce((a,p)=>a+p.subs.length,0);
+
+/* ---------- state ---------- */
+const SAMPLE_CUR={SA:[3,2,2],PG:[2,2,3,2],PM:[3,3,2,2,2,2],CM:[2,2,3,2,1],PP:[1,2,2,2],PI:[2,2,2],TT:[3,2]};
+const SAMPLE_TGT={SA:[4,3,3],PG:[3,3,3,3],PM:[3,4,3,3,3,3],CM:[3,3,3,3,2],PP:[2,3,3,3],PI:[3,3,3],TT:[3,3]};
+const SAMPLE_NOTE={"PP-1":"仅财务口径有同行数据，流程指标未做对标。","SA-1":"集团“十五五”规划已明确流程变革为三大能力建设之一。","TT-1":"已上线流程管理平台，但各子公司仍各用各的模板。"};
+function sampleState(){
+  const s={meta:{org:"示例：某装备制造集团",scope:"集团总部 + 3 家主要子公司",assessor:"流程与数字化部",date:"2026-09-24"},scores:{},weights:{},sample:true};
+  MODEL.forEach(p=>{s.weights[p.id]=1;p.subs.forEach((sub,i)=>{s.scores[sub.key]={c:SAMPLE_CUR[p.id][i],t:SAMPLE_TGT[p.id][i],note:SAMPLE_NOTE[sub.key]||""}})});
+  return s;
+}
+function emptyState(){
+  const s={meta:{org:"",scope:"",assessor:"",date:new Date().toISOString().slice(0,10)},scores:{},weights:{},sample:false};
+  MODEL.forEach(p=>{s.weights[p.id]=1;p.subs.forEach(sub=>{s.scores[sub.key]={c:0,t:0,note:""}})});
+  return s;
+}
+const LS_KEY="apqc-pmm-selfassess-v1";
+let state;
+try{const raw=localStorage.getItem(LS_KEY);state=raw?JSON.parse(raw):null}catch(e){state=null}
+if(!state||!state.scores)state=sampleState();
+MODEL.forEach(p=>{if(state.weights[p.id]==null)state.weights[p.id]=1;p.subs.forEach(s=>{if(!state.scores[s.key])state.scores[s.key]={c:0,t:0,note:""}})});
+function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}}
+let ui={tab:"model",p:0};
+try{const u=JSON.parse(localStorage.getItem(LS_KEY+"-ui")||"null");if(u)ui=Object.assign(ui,u)}catch(e){}
+function saveUi(){try{localStorage.setItem(LS_KEY+"-ui",JSON.stringify(ui))}catch(e){}}
+
+/* ---------- scoring ---------- */
+function tgtOf(sc){return sc.t||(sc.c?Math.min(5,sc.c+1):0)}
+function principleCalc(p){
+  const cs=p.subs.map(s=>state.scores[s.key].c).filter(v=>v>0);
+  const ts=p.subs.map(s=>tgtOf(state.scores[s.key])).filter(v=>v>0);
+  const done=cs.length, n=p.subs.length;
+  if(!done)return{done,n,avg:null,level:null,tavg:null,min:null};
+  const avg=cs.reduce((a,b)=>a+b,0)/done;
+  const min=Math.min(...cs);
+  const level=Math.max(1,Math.min(Math.floor(avg+1e-9),min+1));
+  const tavg=ts.length?ts.reduce((a,b)=>a+b,0)/ts.length:null;
+  return{done,n,avg,level,tavg,min};
+}
+function overallCalc(){
+  const rows=MODEL.map(p=>({p,...principleCalc(p)}));
+  const scored=rows.filter(r=>r.avg!=null);
+  const done=rows.reduce((a,r)=>a+r.done,0);
+  if(!scored.length)return{rows,done,score:null,stage:null,tscore:null};
+  let wsum=0,acc=0,tacc=0;
+  scored.forEach(r=>{const w=+state.weights[r.p.id]||0;wsum+=w;acc+=w*r.avg;tacc+=w*(r.tavg||r.avg)});
+  const score=wsum?acc/wsum:null, tscore=wsum?tacc/wsum:null;
+  const minLv=Math.min(...scored.map(r=>r.level));
+  const stage=score==null?null:Math.max(1,Math.min(Math.floor(score+1e-9),minLv+1));
+  return{rows,done,score,stage,tscore,minLv};
+}
+const f2=v=>v==null?"—":v.toFixed(2);
+const lvName=l=>l?`L${l} ${LEVELS[l-1]}`:"未评";
+function lvStyle(l){return l?`background:var(--l${l});color:var(--l${l}-ink)`:"background:var(--surface-2);color:var(--muted)"}
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- header ---------- */
+function renderHeader(){
+  const o=overallCalc();
+  document.getElementById("scorebar").innerHTML=`
+   <div class="chip"><div class="v">${f2(o.score)}</div><div class="k">综合得分（满分 5）</div></div>
+   <div class="chip stage"><div class="v">${o.stage?LEVELS[o.stage-1]+"阶段":"—"}</div><div class="k">整体成熟度${o.stage?" · L"+o.stage:""}</div></div>
+   <div class="chip"><div class="v">${o.done}<span style="font-size:13px;color:var(--muted)">/${TOTAL_SUBS}</span></div><div class="k">已评子类别</div></div>`;
+  document.getElementById("sampleBanner").hidden=!state.sample;
+}
+
+/* ---------- view: model ---------- */
+function renderModel(){
+  const byId=Object.fromEntries(MODEL.map(p=>[p.id,p]));
+  const card=(id,cls)=>{const p=byId[id];const i=MODEL.indexOf(p)+1;return `<div class="lg ${cls}"><div class="tag">原则 ${i} · ${p.subs.length} 个子类别</div><h3>${p.name}</h3><div class="role">${p.role}</div><div class="subs">${p.subs.map(s=>s.n).join(" · ")}</div></div>`};
+  const evoRows=MODEL.map((p,i)=>`<tr><td>${i+1}. ${p.name}<span class="d">${p.role}</span></td>${p.keys.map((k,l)=>`<td>${k}</td>`).join("")}</tr>`).join("");
+  document.getElementById("view-model").innerHTML=`
+  <div class="stack">
+    <div class="grid2">
+      <div>
+        <div class="eyebrow">架构总览</div>
+        <h2 style="margin-top:4px">一个五级阶梯，七根支柱，二十七个评判点</h2>
+        <p class="lead" style="margin-top:10px">APQC 以组织整体的五级成熟度为纵轴，用七大原则作为横向的能力维度，每个原则再拆成若干子类别。评估时逐个子类别对照五级描述判断现状，再由子类别汇总为原则等级，由原则汇总为组织整体阶段。</p>
+        <p class="lead" style="margin-top:10px">APQC《全球业务流程管理成熟度分布》显示，<b class="num">48%</b> 的组织仍处于发展阶段：有部分规范化流程，但尚未实现企业级标准化，也没有完善的绩效管理体系。七大原则正是帮助组织从发展阶段向上进阶的抓手。</p>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">评估的三层结构</div>
+        <table style="margin-top:8px">
+          <tr><th>层级</th><th>数量</th><th>如何得出</th></tr>
+          <tr><td>组织整体阶段</td><td class="num">1</td><td>七原则加权平均，并受最弱原则约束</td></tr>
+          <tr><td>原则等级</td><td class="num">7</td><td>子类别平均，并受最弱子类别约束</td></tr>
+          <tr><td>子类别评分</td><td class="num">${TOTAL_SUBS}</td><td>对照五级分级描述选定 1–5 级</td></tr>
+        </table>
+        <p class="note" style="margin-top:10px">子类别数：战略对齐 3 · 流程治理 4 · 流程模型 6 · 变革管理 5 · 流程绩效 4 · 流程优化 3 · 工具与技术 2。</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="eyebrow">纵轴 · 组织整体五级成熟度</div>
+      <div class="ladder" style="margin-top:10px">
+        ${LEVELS.map((l,i)=>`<div class="rung" style="${lvStyle(i+1)}"><span class="lv">L${i+1} · ${SCOPE[i]}</span><h3>${l}阶段</h3><p>${LEVEL_DEF[i]}</p></div>`).join("")}
+      </div>
+      <p class="note" style="margin-top:8px">各级标签中的“作用范围”是本平台对七个原则共性演进规律的归纳：个人临时 → 部门局部 → 企业统一 → 端到端量化管控 → 文化内化并延伸到外部。</p>
+    </div>
+
+    <div>
+      <div class="eyebrow">横轴 · 七大原则的内在逻辑</div>
+      <h2 style="margin-top:4px">方向与责任在前，共同语言居中，证据与价值构成闭环，技术负责连接放大</h2>
+      <div class="logic" style="margin-top:14px">
+        <div class="layerlab">方向与架构 · 明确目标、搭建架构、划分优先级</div>
+        ${card("SA","dir")}${card("PG","dir")}${card("CM","people")}
+        <div class="layerlab">共同语言 · 统一“做什么、怎么做、如何做好”</div>
+        ${card("PM","base")}
+        <div class="lg base" style="grid-column:span 8;background:var(--surface-2)"><div class="tag">为什么流程模型居中</div><p style="font-size:13px;color:var(--ink-2)">没有统一的框架和端到端图谱，治理无法落到具体流程，指标无从挂接，优化无法定位，技术也无法自动化一个没被理解的流程。它是其余六项原则共用的“坐标系”。</p></div>
+        <div class="layerlab">目标与改进 · 客观指标 + 持续优化机制</div>
+        ${card("PP","loop")}${card("PI","loop")}
+        <div class="loopnote">流程绩效暴露短板 → 流程优化转化为成果 → 绩效数据回流战略规划，调整下一轮优先级</div>
+        <div class="layerlab">连接与规模化</div>
+        ${card("TT","enable")}
+      </div>
+      <p class="note" style="margin-top:8px">分层依据：APQC 指出战略对齐、流程治理和变革管理为组织明确目标、搭建架构和划分优先级提供支撑；流程绩效和流程改进使流程工作拥有明确目标、客观指标和持续优化机制。成熟度高的组织通常具备强有力的集中式治理，高度重视绩效管理。</p>
+    </div>
+
+    <div>
+      <div class="eyebrow">各原则的核心判别维度</div>
+      <p class="lead" style="margin-top:4px">APQC 为每个原则指明了“各级之间差在哪里”。打分时用它来判断：这一级与上一级的本质区别是否已经具备。</p>
+      <div class="diffs" style="margin-top:12px">
+        ${MODEL.map(p=>`<div class="diff"><b>${p.name}</b><p>${p.diff}</p></div>`).join("")}
+      </div>
+    </div>
+
+    <div>
+      <div class="eyebrow">演进主线 · 七原则 × 五级</div>
+      <div class="tblwrap evo" style="margin-top:10px">
+        <table><tr><th>原则</th>${LEVELS.map((l,i)=>`<th><span class="lvtag" style="${lvStyle(i+1)}">L${i+1}</span> ${l}</th>`).join("")}</tr>${evoRows}</table>
+      </div>
+    </div>
+
+    <div>
+      <div class="eyebrow">组织形态参照 · 职能到流程的转型</div>
+      <div class="mind" style="margin-top:10px">
+        <div><b>职能导向型</b><p>层级化管理纵向活动，难以快速响应市场和客户。</p></div>
+        <div><b>流程思维型</b><p>把活动视为整体流程来思考，推动定义与文档化，但人员与业务尚未深度融合。</p></div>
+        <div><b>流程聚焦型</b><p>整合并管理以客户为导向的端到端流程，管理重心从层级转向横向。</p></div>
+        <div><b>流程导向型</b><p>围绕端到端工作流全面重组，职能活动嵌入流程，由高管负责跨企业流程。</p></div>
+      </div>
+      <p class="note" style="margin-top:8px">组织无需一次性完成转型，不同业务板块可处于不同形态。</p>
+    </div>
+  </div>`;
+}
+
+/* ---------- view: assess ---------- */
+function renderAssess(){
+  const p=MODEL[ui.p], pc=principleCalc(p);
+  const m=state.meta;
+  const nav=MODEL.map((q,i)=>{const c=principleCalc(q);return `<button data-p="${i}" aria-current="${i===ui.p}"><span class="idx">${i+1}</span><span class="nm">${q.name}</span><span class="pg">${c.avg!=null?f2(c.avg):c.done+"/"+c.n}</span><span class="bar"><i style="width:${c.done/c.n*100}%"></i></span></button>`}).join("");
+  const subs=p.subs.map((s,si)=>{
+    const sc=state.scores[s.key], t=tgtOf(sc);
+    const rows=s.L.map((txt,li)=>{const l=li+1,inf=txt.startsWith("~"),tx=inf?txt.slice(1):txt;
+      return `<div class="lvl ${sc.c===l?"on":""}" data-k="${s.key}" data-l="${l}" role="radio" aria-checked="${sc.c===l}" tabindex="0">
+        <div class="lb"><span class="sw" style="${lvStyle(l)}">${l}</span>${LEVELS[li]}</div>
+        <div class="tx">${esc(tx)}${inf?`<span class="inf" title="原文未直接给出该子类别在此级的描述，依据该原则的演进规律推演">· 推演</span>`:""}</div>
+        <button class="tg" data-tk="${s.key}" data-tl="${l}" aria-pressed="${t===l}" title="设为目标等级">${t===l?"目标":"设为目标"}</button>
+      </div>`}).join("");
+    return `<div class="sub">
+      <div class="sh"><h3><span class="code">${s.key}</span>${s.n}</h3>
+        <div class="state">${sc.c?`<span class="pill cur">现状 L${sc.c}</span>`:`<span class="pill none">未评</span>`}${t?`<span class="pill tgt">目标 L${t}${sc.t?"":"（默认+1）"}</span>`:""}</div>
+        <p class="def">${s.d}</p></div>
+      <div class="lvls" role="radiogroup" aria-label="${s.n} 现状等级">${rows}</div>
+      <div class="nt"><label for="note-${s.key}">评估依据 / 证据</label><textarea id="note-${s.key}" data-note="${s.key}" placeholder="记录支撑该评级的事实、文件或访谈结论">${esc(sc.note)}</textarea></div>
+    </div>`}).join("");
+  document.getElementById("view-assess").innerHTML=`
+    <div class="panel">
+      <div class="eyebrow">评估信息</div>
+      <div class="meta" style="margin-top:8px">
+        <div class="field"><label for="m-org">被评估组织</label><input id="m-org" data-meta="org" value="${esc(m.org)}" placeholder="如：某某集团"></div>
+        <div class="field"><label for="m-scope">评估范围</label><input id="m-scope" data-meta="scope" value="${esc(m.scope)}" placeholder="如：集团总部及二级单位"></div>
+        <div class="field"><label for="m-assessor">评估人 / 部门</label><input id="m-assessor" data-meta="assessor" value="${esc(m.assessor)}"></div>
+        <div class="field"><label for="m-date">评估日期</label><input id="m-date" type="date" data-meta="date" value="${esc(m.date)}"></div>
+      </div>
+    </div>
+    <div class="assess">
+      <div class="pnav">${nav}</div>
+      <div class="stack">
+        <div class="phead">
+          <div><div class="eyebrow">原则 ${ui.p+1} / 7 · ${p.role}</div><h2 style="margin-top:2px">${p.name}</h2>
+            <p class="essence">${p.essence}</p>
+            <p class="diffline"><b>判别要点：</b>${p.diff}</p></div>
+          <div class="pscore">
+            <div class="chip"><div class="v">${f2(pc.avg)}</div><div class="k">原则均分</div></div>
+            <div class="chip stage"><div class="v">${pc.level?LEVELS[pc.level-1]:"—"}</div><div class="k">原则等级${pc.level?" · L"+pc.level:""}</div></div>
+          </div>
+        </div>
+        <p class="note">点击一行选定“现状”等级；用右侧按钮设定“目标”等级（不设时默认为现状 +1）。标注“推演”的描述在原文中没有直接对应，依据该原则的整体演进规律补齐，评估时可结合实际理解。</p>
+        ${subs}
+        <div class="panel">
+          <div class="eyebrow">APQC 最佳实践 · 按适用阶段</div>
+          <div class="stack" style="gap:10px;margin-top:10px">${p.practices.slice().sort((a,b)=>a.s-b.s).map(x=>`<div class="practice"><b>${x.t}</b><span class="st">${LEVELS[x.s-1]}阶段适用</span><p>${x.d}</p></div>`).join("")}</div>
+        </div>
+        <div class="pnext">
+          <button class="btn" data-go="${ui.p-1}" ${ui.p===0?"disabled":""}>← ${ui.p>0?MODEL[ui.p-1].name:""}</button>
+          ${ui.p<6?`<button class="btn primary" data-go="${ui.p+1}">下一项：${MODEL[ui.p+1].name} →</button>`:`<button class="btn primary" data-tabgo="report">查看诊断报告 →</button>`}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ---------- charts ---------- */
+function radarSVG(rows){
+  const W=460,H=400,cx=230,cy=205,R=150,n=rows.length;
+  const ang=i=>-Math.PI/2+i*2*Math.PI/n;
+  const pt=(i,v)=>[cx+R*(v/5)*Math.cos(ang(i)),cy+R*(v/5)*Math.sin(ang(i))];
+  let g="";
+  for(let k=1;k<=5;k++){const pts=rows.map((_,i)=>pt(i,k).map(x=>x.toFixed(1)).join(",")).join(" ");g+=`<polygon points="${pts}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+    g+=`<text x="${cx+4}" y="${(cy-R*k/5+4).toFixed(1)}" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${k}</text>`}
+  rows.forEach((r,i)=>{const [x,y]=pt(i,5);g+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--line)"/>`;
+    const [lx,ly]=pt(i,5.9);const anchor=Math.abs(lx-cx)<8?"middle":(lx>cx?"start":"end");
+    g+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" text-anchor="${anchor}" font-size="12.5" fill="var(--ink)" font-weight="500">${r.p.name}</text>`;
+    g+=`<text x="${lx.toFixed(1)}" y="${(ly+19).toFixed(1)}" text-anchor="${anchor}" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${f2(r.avg)} → ${f2(r.tavg)}</text>`});
+  const poly=(key,stroke,fill,dash)=>{const pts=rows.map((r,i)=>pt(i,r[key]||0).map(x=>x.toFixed(1)).join(",")).join(" ");return `<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="2" ${dash?'stroke-dasharray="5 4"':""} stroke-linejoin="round"/>`};
+  g+=poly("tavg","var(--target)","none",true);
+  g+=poly("avg","var(--accent)","color-mix(in srgb, var(--accent) 18%, transparent)",false);
+  rows.forEach((r,i)=>{if(r.avg==null)return;const [x,y]=pt(i,r.avg);g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2" data-tip="${r.p.name}｜现状均分 ${f2(r.avg)}（${lvName(r.level)}）｜目标 ${f2(r.tavg)}"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14" fill="transparent" data-tip="${r.p.name}｜现状均分 ${f2(r.avg)}（${lvName(r.level)}）｜目标 ${f2(r.tavg)}"/>`});
+  return `<svg viewBox="-40 -10 ${W+80} ${H+20}" role="img" aria-label="七原则现状与目标雷达图">${g}</svg>`;
+}
+function profileSVG(){
+  const rowH=24,top=30,left=150,right=24,W=640,plotW=W-left-right;
+  const items=[];MODEL.forEach(p=>{items.push({head:p});p.subs.forEach(s=>items.push({p,s}))});
+  const H=top+items.length*rowH+10;
+  const x=v=>left+(v-1)/4*plotW;
+  let g="";
+  for(let l=1;l<=5;l++){g+=`<line x1="${x(l)}" y1="${top-6}" x2="${x(l)}" y2="${H-6}" stroke="var(--line)"/><text x="${x(l)}" y="${top-12}" text-anchor="middle" font-size="11" fill="var(--muted)">L${l} ${LEVELS[l-1]}</text>`}
+  items.forEach((it,i)=>{const y=top+i*rowH+rowH/2;
+    if(it.head){g+=`<text x="0" y="${y+4}" font-size="12.5" font-weight="600" fill="var(--ink)">${it.head.name}</text><line x1="0" y1="${y+9}" x2="${W-right}" y2="${y+9}" stroke="var(--line)" stroke-dasharray="2 3"/>`;return}
+    const sc=state.scores[it.s.key],t=tgtOf(sc);
+    g+=`<text x="12" y="${y+4}" font-size="12" fill="var(--ink-2)">${it.s.n}</text>`;
+    if(sc.c&&t>sc.c)g+=`<line x1="${x(sc.c)}" y1="${y}" x2="${x(t)}" y2="${y}" stroke="var(--target)" stroke-width="2" opacity=".55"/>`;
+    const tip=`${it.p.name} · ${it.s.n}｜现状 ${lvName(sc.c)}｜目标 ${lvName(t)}${sc.note?"｜"+esc(sc.note):""}`;
+    if(t)g+=`<circle cx="${x(t)}" cy="${y}" r="6" fill="var(--surface)" stroke="var(--target)" stroke-width="2"/>`;
+    if(sc.c)g+=`<circle cx="${x(sc.c)}" cy="${y}" r="6" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+    else g+=`<text x="${x(1)}" y="${y+4}" font-size="11" fill="var(--muted)" text-anchor="middle">未评</text>`;
+    g+=`<rect x="0" y="${y-rowH/2}" width="${W}" height="${rowH}" fill="transparent" data-tip="${tip}"/>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="min-width:560px" role="img" aria-label="子类别成熟度剖面">${g}</svg>`;
+}
+
+/* ---------- diagnostics ---------- */
+function insights(o){
+  const a=Object.fromEntries(o.rows.map(r=>[r.p.id,r.avg]));
+  if(Object.values(a).some(v=>v==null))return[{sev:"md",t:"评估尚未完成",d:"七个原则都至少完成一个子类别后，才能做跨原则的关联诊断。"}];
+  const out=[],mean=o.score;
+  const others=id=>{const v=Object.entries(a).filter(([k])=>k!==id).map(([,x])=>x);return v.reduce((s,x)=>s+x,0)/v.length};
+  if(a.PP<=2.5&&a.PP<mean)out.push({sev:"hi",t:"量化瓶颈：流程绩效拖住整体进阶",d:`流程绩效均分 ${f2(a.PP)}。APQC 指出，从标准化向优化跨越是最常见的难题，原因往往是没有对流程做量化分析。优化阶段的定义本身要求“通过统计和定量技术实施管控”，绩效不补齐，整体很难越过 L3。`});
+  if(a.TT-a.PM>=1)out.push({sev:"hi",t:"技术先行风险：工具领先于流程模型",d:`工具与技术 ${f2(a.TT)} 高出流程模型 ${f2(a.PM)} 一级以上。企业无法自动化自己不理解的流程，技术先导容易导致让流程适配系统、过度采购，或误把系统上线当成流程标准化。`});
+  if(a.PG+0.8<=others("PG"))out.push({sev:"hi",t:"治理滞后：责任和规则跟不上",d:`流程治理 ${f2(a.PG)} 明显低于其他原则均值 ${f2(others("PG"))}。治理水平决定流程管理的落地效率、速度和深度；缺少流程所有者与统一方法，其他原则的成果难以保持。`});
+  if(a.PM-a.CM>=1)out.push({sev:"md",t:"文档有了，行为没变",d:`流程模型 ${f2(a.PM)} 高于变革管理 ${f2(a.CM)}。流程已被记录，但员工参与、沟通、培训和激励不足，新流程可能停留在纸面。`});
+  if(a.SA<=2.2&&a.PI>=2.8)out.push({sev:"md",t:"优化缺少战略牵引",d:`流程优化 ${f2(a.PI)} 较活跃而战略对齐只有 ${f2(a.SA)}。脱离整体战略的优化容易碎片化，单个项目有效，却可能对其他业务环节造成负面影响。`});
+  if(a.PI-a.PP>=0.8)out.push({sev:"md",t:"改进缺少证据",d:`流程优化 ${f2(a.PI)} 领先流程绩效 ${f2(a.PP)}。机会筛选和成果验证缺少客观指标，难以证明价值，也难以按价值排序。`});
+  if(Math.min(a.SA,a.PG,a.CM)>=2.8&&Math.max(a.PP,a.PI)<=2.3)out.push({sev:"md",t:"架构齐备，闭环未成",d:"方向、治理和变革已有基础，但绩效与优化两项偏弱，流程工作缺少客观目标和持续改进机制，价值难以显现。"});
+  const vals=Object.values(a),spread=Math.max(...vals)-Math.min(...vals);
+  if(spread>=1.5){const hi=o.rows.reduce((x,y)=>y.avg>x.avg?y:x),lo=o.rows.reduce((x,y)=>y.avg<x.avg?y:x);out.push({sev:"md",t:"原则之间发展不均衡",d:`最强的${hi.p.name}（${f2(hi.avg)}）与最弱的${lo.p.name}（${f2(lo.avg)}）相差 ${spread.toFixed(1)} 分。七项原则相互支撑，整体阶段受最弱原则约束。`})}
+  const shorts=[];o.rows.forEach(r=>r.p.subs.forEach(s=>{const c=state.scores[s.key].c;if(c&&r.avg-c>=1)shorts.push(`${r.p.name}·${s.n}（L${c}）`)}));
+  if(shorts.length)out.push({sev:"md",t:"原则内部短板",d:`以下子类别比所在原则均分低一级以上，会通过短板约束拉低原则等级：${shorts.join("、")}。`});
+  if(!out.length)out.push({sev:"ok",t:"七项原则发展较为均衡",d:"未发现明显的跨原则失衡。进阶重点是按目标等级逐项补齐下一级的判别要点。"});
+  return out;
+}
+function roadmap(r){
+  const cur=r.level||1;
+  const T=Math.min(5,Math.max(cur+1,Math.round(r.tavg||0)));
+  let pr=r.p.practices.filter(x=>x.s>cur&&x.s<=T);
+  let early=false;
+  if(!pr.length&&cur<5){const nxt=r.p.practices.filter(x=>x.s>cur).sort((a,b)=>a.s-b.s);if(nxt.length){pr=nxt.filter(x=>x.s===nxt[0].s);early=true}}
+  if(!pr.length)pr=r.p.practices.filter(x=>x.s<=cur).slice(-1);
+  const gaps=r.p.subs.map(s=>{const sc=state.scores[s.key];return{s,c:sc.c,t:tgtOf(sc)}}).filter(x=>x.c&&x.t>x.c).sort((a,b)=>(b.t-b.c)-(a.t-a.c)||a.c-b.c);
+  return{cur,T,pr,early,gaps};
+}
+
+/* ---------- view: report ---------- */
+function renderReport(){
+  const o=overallCalc(),m=state.meta;
+  const scored=o.rows.filter(r=>r.avg!=null);
+  const strong=scored.length?scored.reduce((x,y)=>y.avg>x.avg?y:x):null;
+  const weak=scored.length?scored.reduce((x,y)=>y.avg<x.avg?y:x):null;
+  const ins=insights(o);
+  const ptable=o.rows.map((r,i)=>{const g=r.tavg!=null&&r.avg!=null?r.tavg-r.avg:null;return `<tr>
+    <td class="nm">${i+1}. ${r.p.name}</td><td class="num">${r.done}/${r.n}</td><td class="num">${f2(r.avg)}</td>
+    <td><span class="lvtag" style="${lvStyle(r.level)}">${lvName(r.level)}</span></td>
+    <td><div class="mbar"><span class="c" style="width:${r.avg?(r.avg/5*100):0}%"></span>${r.tavg?`<span class="t" style="left:calc(${r.tavg/5*100}% - 1px)"></span>`:""}</div></td>
+    <td class="num">${f2(r.tavg)}</td><td class="num gap ${g>0?"":"zero"}">${g==null?"—":(g>0?"+":"")+g.toFixed(2)}</td>
+    <td class="field" style="padding-block:6px"><label for="w-${r.p.id}" style="position:absolute;left:-9999px">${r.p.name}权重</label><select id="w-${r.p.id}" data-w="${r.p.id}" style="width:auto;padding:3px 6px">${[0,0.5,1,1.5,2,3].map(v=>`<option value="${v}" ${+state.weights[r.p.id]===v?"selected":""}>×${v}</option>`).join("")}</select></td></tr>`}).join("");
+  const road=o.rows.filter(r=>r.avg!=null).map(r=>{const rm=roadmap(r);return `<div class="rd">
+     <div class="rh"><h3>${r.p.name}</h3><span class="path"><span class="lvtag" style="${lvStyle(rm.cur)}">L${rm.cur} ${LEVELS[rm.cur-1]}</span> → <span class="lvtag" style="${lvStyle(Math.min(5,rm.cur+1))}">L${Math.min(5,rm.cur+1)} ${LEVELS[Math.min(5,rm.cur+1)-1]}</span>${rm.T>rm.cur+1?` → 目标 L${rm.T}`:""}</span></div>
+     <div class="cols">
+       <div><h4>待补齐的子类别（按差距排序）</h4>${rm.gaps.length?`<ul>${rm.gaps.slice(0,4).map(g=>{const nx=g.s.L[g.c].replace(/^~/,"");return `<li><b>${g.s.n}</b> L${g.c}→L${g.t}<br><span>下一级要求：${esc(nx)}</span></li>`}).join("")}</ul>`:`<p class="note">各子类别均已达到目标。</p>`}</div>
+       <div><h4>对应的 APQC 最佳实践${rm.early?"（提前布局）":""}</h4><ul>${rm.pr.map(x=>`<li><b>${x.t}</b> <span class="note">${LEVELS[x.s-1]}阶段适用</span><br><span>${x.d}</span></li>`).join("")}</ul></div>
+     </div></div>`}).join("");
+  document.getElementById("view-report").innerHTML=`
+  <div class="stack">
+    <div class="phead">
+      <div><div class="eyebrow">诊断报告${state.sample?" · 示例数据":""}</div><h2 style="margin-top:2px">${esc(m.org)||"未命名组织"}</h2>
+      <p class="note" style="margin-top:4px">${[m.scope,m.assessor,m.date].filter(Boolean).map(esc).join(" · ")||"在“分项打分”页填写评估信息"}</p></div>
+      <div class="btnrow"><button class="btn" id="copySummary">复制报告摘要</button><button class="btn" id="exportJson">导出数据</button><button class="btn" id="importJson">导入数据</button></div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="v">${f2(o.score)}<small> / 5</small></div><div class="k">综合得分（七原则加权平均）</div></div>
+      <div class="kpi"><div class="v serif">${o.stage?LEVELS[o.stage-1]+"阶段":"—"}</div><div class="k">整体成熟度${o.stage?` · L${o.stage}（受最弱原则 L${o.minLv} 约束）`:""}</div></div>
+      <div class="kpi"><div class="v">${f2(o.tscore)}<small> / 5</small></div><div class="k">目标得分 · 差距 ${o.score!=null?"+"+(o.tscore-o.score).toFixed(2):"—"}</div></div>
+      <div class="kpi"><div class="v serif" style="font-size:19px">${strong?strong.p.name:"—"} / ${weak?weak.p.name:"—"}</div><div class="k">最强原则 / 最弱原则</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel chartbox"><div class="eyebrow">七原则现状与目标</div>${radarSVG(o.rows)}
+        <div class="legend"><span><i style="background:var(--accent)"></i>现状均分</span><span><i class="dash"></i>目标均分</span></div></div>
+      <div class="panel"><div class="eyebrow">关联诊断</div><p class="note" style="margin-top:2px">依据七原则之间的依赖关系自动识别失衡模式</p>
+        <div style="margin-top:6px">${ins.map(x=>`<div class="insight"><span class="sev ${x.sev}">${x.sev==="hi"?"重点":x.sev==="md"?"关注":"良好"}</span><b>${x.t}</b><p>${x.d}</p></div>`).join("")}</div></div>
+    </div>
+    <div>
+      <div class="eyebrow">原则得分表</div>
+      <div class="tblwrap ptable" style="margin-top:8px"><table>
+        <tr><th>原则</th><th>已评</th><th>均分</th><th>原则等级</th><th>现状 · 目标</th><th>目标</th><th>差距</th><th>权重</th></tr>${ptable}</table></div>
+      <p class="note" style="margin-top:6px">条形为现状均分，竖线为目标均分。权重默认均为 ×1，可按企业侧重调整，调整后综合得分即时重算。</p>
+    </div>
+    <div class="panel">
+      <div class="eyebrow">子类别成熟度剖面</div>
+      <div class="legend" style="margin-bottom:6px"><span><i style="background:var(--accent);height:10px;width:10px;border-radius:50%"></i>现状</span><span><i style="border:2px solid var(--target);height:10px;width:10px;border-radius:50%;background:none"></i>目标</span><span>连线长度 = 需跨越的级数</span></div>
+      <div style="overflow-x:auto">${profileSVG()}</div>
+    </div>
+    <div>
+      <div class="eyebrow">进阶路径</div>
+      <h2 style="margin-top:2px">下一级要补齐什么</h2>
+      <p class="lead" style="margin-top:6px">每个原则列出与目标差距最大的子类别及其下一级判定标准，并匹配 APQC 在对应阶段推荐的最佳实践。</p>
+      <div class="road" style="margin-top:12px">${road||`<p class="note">完成打分后生成进阶路径。</p>`}</div>
+    </div>
+  </div>`;
+}
+
+/* ---------- view: method ---------- */
+function renderMethod(){
+  document.getElementById("view-method").innerHTML=`
+  <div class="grid2">
+    <div class="panel method">
+      <div class="eyebrow">计分规则</div>
+      <ol style="padding-left:18px;margin-top:10px">
+        <li><b>子类别评分</b>：对照五级描述选定现状等级 1–5。判断标准是“该级描述已在评估范围内普遍、稳定地成立”，局部试点不算达成。</li>
+        <li><b>原则均分</b> = 已评子类别的算术平均。</li>
+        <li><b>原则等级</b> = <code>min(⌊均分⌋, 最低子类别 + 1)</code>。均分反映整体水平，短板约束防止某个子类别严重落后时被平均值掩盖。</li>
+        <li><b>综合得分</b> = 七原则均分按权重加权平均（默认等权）。</li>
+        <li><b>整体阶段</b> = <code>min(⌊综合得分⌋, 最弱原则等级 + 1)</code>，与 APQC“七大原则各维度成熟度提升最终推动整体成熟度提升”的逻辑一致。</li>
+        <li><b>目标等级</b>：未单独设定时默认取现状 +1，即“下一步最值得补齐的能力”。</li>
+      </ol>
+      <p class="note" style="margin-top:8px">以上汇总与约束规则是本平台为自评设计的计算方法，不是 APQC 官方计分公式。APQC 官方基准评估请以其正式评估工具为准。</p>
+    </div>
+    <div class="panel method">
+      <div class="eyebrow">评判标准的来源</div>
+      <ul style="padding-left:18px;margin-top:10px">
+        <li>七大原则、各原则子类别及定义、各原则的五级描述、核心判别维度与分阶段最佳实践，来自 APQC 新版流程管理成熟度模型的中文解读连载（杰成合力科技经 APQC 授权发布，2026 年 8 月，共 7 篇）。</li>
+        <li>APQC 原文按原则给出五级描述；本平台把每条描述拆解到对应子类别，并吸收该阶段的最佳实践作为判据。</li>
+        <li>原文未覆盖的少数“子类别 × 等级”格子标注为<b>“推演”</b>，按该原则的整体演进规律补齐。</li>
+      </ul>
+      <div class="eyebrow" style="margin-top:16px">数据保存与迁移</div>
+      <p style="margin-top:6px">打分会自动保存在当前浏览器中，换设备或清理浏览器数据后不会保留。需要存档、多人汇总或换设备时，用“导出数据”复制 JSON 文本另存，再用“导入数据”粘贴或选择文件恢复。</p>
+      <div class="btnrow" style="margin-top:12px">
+        <button class="btn" id="exportJson2">导出数据</button><button class="btn" id="importJson2">导入数据</button>
+        <button class="btn" id="loadSample">载入示例</button><button class="btn warn" id="resetAll">清空全部打分</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- plumbing ---------- */
+function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+function dialog(html,onMount){const d=document.createElement("div");d.className="dlg";d.innerHTML=`<div class="box">${html}</div>`;document.body.appendChild(d);
+  const close=()=>d.remove();d.addEventListener("click",e=>{if(e.target===d||e.target.closest("[data-close]"))close()});onMount&&onMount(d,close);return close}
+function copyText(text,okMsg,d){
+  const fallback=()=>{if(d){const ta=d.querySelector("textarea");if(ta){ta.focus();ta.select()}}toast("无法直接写入剪贴板，已选中文本，请手动复制")};
+  try{navigator.clipboard.writeText(text).then(()=>toast(okMsg),fallback)}catch(e){fallback()}
+}
+function openExport(){
+  const json=JSON.stringify({model:"APQC-PMM-7P-27S",exported:new Date().toISOString(),...state},null,2);
+  dialog(`<h3>导出评估数据</h3><p class="note">复制以下 JSON 保存为文本文件，之后可通过“导入数据”恢复。</p><textarea id="exp-ta" readonly>${esc(json)}</textarea><div class="btnrow"><button class="btn primary" id="exp-copy">复制</button><button class="btn" data-close>关闭</button></div>`,
+   (d)=>{d.querySelector("#exp-copy").onclick=()=>copyText(json,"已复制评估数据",d)});
+}
+function openImport(){
+  dialog(`<h3>导入评估数据</h3><p class="note">粘贴此前导出的 JSON，或选择保存的文件。导入会覆盖当前打分。</p><textarea id="imp-ta" placeholder="粘贴 JSON"></textarea><input type="file" id="imp-file" accept=".json,.txt,application/json,text/plain"><p class="note" id="imp-err" style="color:var(--warn)"></p><div class="btnrow"><button class="btn primary" id="imp-go">导入并覆盖</button><button class="btn" data-close>取消</button></div>`,
+   (d,close)=>{
+     d.querySelector("#imp-file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{d.querySelector("#imp-ta").value=r.result};r.readAsText(f)};
+     d.querySelector("#imp-go").onclick=()=>{try{const obj=JSON.parse(d.querySelector("#imp-ta").value);if(!obj.scores)throw new Error();
+        const s=emptyState();s.meta=Object.assign(s.meta,obj.meta||{});Object.keys(s.scores).forEach(k=>{if(obj.scores[k])s.scores[k]={c:+obj.scores[k].c||0,t:+obj.scores[k].t||0,note:obj.scores[k].note||""}});
+        Object.keys(s.weights).forEach(k=>{if(obj.weights&&obj.weights[k]!=null)s.weights[k]=+obj.weights[k]});s.sample=!!obj.sample;state=s;save();close();renderAll();toast("已导入评估数据")}
+       catch(err){d.querySelector("#imp-err").textContent="无法识别这段内容。请粘贴从本平台“导出数据”得到的完整 JSON。"}};
+   });
+}
+function confirmBox(msg,okLabel,fn){dialog(`<h3>${msg}</h3><div class="btnrow"><button class="btn warn" id="cf-ok">${okLabel}</button><button class="btn" data-close>取消</button></div>`,(d,close)=>{d.querySelector("#cf-ok").onclick=()=>{fn();close()}})}
+function summaryText(){
+  const o=overallCalc(),m=state.meta;const lines=[];
+  lines.push(`【APQC 流程管理成熟度自评】${m.org||"未命名组织"}${m.date?"（"+m.date+"）":""}`);
+  if(m.scope)lines.push(`评估范围：${m.scope}`);
+  lines.push(`综合得分 ${f2(o.score)} / 5，整体处于${o.stage?LEVELS[o.stage-1]+"阶段（L"+o.stage+"）":"—"}；目标得分 ${f2(o.tscore)}。`);
+  lines.push("各原则：");o.rows.forEach((r,i)=>lines.push(`  ${i+1}. ${r.p.name}：${f2(r.avg)}（${lvName(r.level)}）→ 目标 ${f2(r.tavg)}`));
+  lines.push("关联诊断：");insights(o).forEach(x=>lines.push(`  · ${x.t}`));
+  return lines.join("\n");
+}
+function setTab(t){ui.tab=t;saveUi();document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+  ["model","assess","report","method"].forEach(v=>document.getElementById("view-"+v).hidden=v!==t);renderView()}
+function renderView(){renderHeader();({model:renderModel,assess:renderAssess,report:renderReport,method:renderMethod})[ui.tab]()}
+function renderAll(){renderView()}
+function afterScoreChange(){if(state.sample){state.sample=false}save();renderView()}
+
+document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(b)setTab(b.dataset.tab)});
+document.getElementById("startFresh").onclick=()=>{state=emptyState();save();ui.p=0;setTab("assess");toast("已清空，开始新的评估")};
+
+document.addEventListener("click",e=>{
+  const tg=e.target.closest(".tg");
+  if(tg){e.stopPropagation();const sc=state.scores[tg.dataset.tk],l=+tg.dataset.tl;sc.t=(sc.t===l)?0:l;afterScoreChange();return}
+  const lv=e.target.closest(".lvl");
+  if(lv){const sc=state.scores[lv.dataset.k],l=+lv.dataset.l;sc.c=(sc.c===l)?0:l;if(sc.t&&sc.t<sc.c)sc.t=0;afterScoreChange();return}
+  const pn=e.target.closest(".pnav button");if(pn){ui.p=+pn.dataset.p;saveUi();renderView();return}
+  const go=e.target.closest("[data-go]");if(go&&!go.disabled){ui.p=+go.dataset.go;saveUi();renderView();window.scrollTo({top:0});return}
+  const tgo=e.target.closest("[data-tabgo]");if(tgo){setTab(tgo.dataset.tabgo);window.scrollTo({top:0});return}
+  const id=e.target.id;
+  if(id==="exportJson"||id==="exportJson2")openExport();
+  if(id==="importJson"||id==="importJson2")openImport();
+  if(id==="copySummary"){const t=summaryText();copyText(t,"已复制报告摘要")}
+  if(id==="loadSample")confirmBox("载入示例数据会覆盖当前打分，确定吗？","载入示例",()=>{state=sampleState();save();renderView();toast("已载入示例数据")});
+  if(id==="resetAll")confirmBox("清空全部打分和评估依据？","清空",()=>{state=emptyState();save();renderView();toast("已清空")});
+});
+document.addEventListener("keydown",e=>{const lv=e.target.closest&&e.target.closest(".lvl");if(lv&&(e.key==="Enter"||e.key===" ")&&!e.target.closest(".tg")){e.preventDefault();lv.click()}});
+document.addEventListener("input",e=>{
+  const n=e.target.dataset.note;if(n){state.scores[n].note=e.target.value;save();return}
+  const m=e.target.dataset.meta;if(m){state.meta[m]=e.target.value;save();return}
+});
+document.addEventListener("change",e=>{const w=e.target.dataset.w;if(w){state.weights[w]=+e.target.value;save();renderView()}});
+const tip=document.getElementById("tip");
+document.addEventListener("mousemove",e=>{const t=e.target.closest&&e.target.closest("[data-tip]");if(!t){tip.hidden=true;return}
+  tip.textContent=t.getAttribute("data-tip").split("｜").join("\n");tip.style.whiteSpace="pre-line";tip.hidden=false;
+  const x=Math.min(e.clientX+14,window.innerWidth-270);tip.style.left=x+"px";tip.style.top=(e.clientY+14)+"px"});
+
+setTab(ui.tab);
+</script>
+</body>
+</html>
